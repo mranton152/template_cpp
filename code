@@ -1,0 +1,601 @@
+#include "pch.h"
+#include <iostream>
+#include <stdlib.h>
+#include <vector>
+#include <string>
+#include <fstream>
+using namespace std;
+
+#pragma region Data
+class Data {
+private:
+	int day;
+	int month;
+	int year;
+public:
+	Data() :day(1), month(1), year(2019) {}
+	Data(int d, int m, int y) :day(d), month(m), year(y) {}
+	~Data() {}
+	string data() {
+		return  to_string(day) + '.' + to_string(month) + '.' + to_string(year);
+	}
+	friend ostream& operator << (ostream& out, const Data& obj)
+	{
+		out << obj.day << " " << obj.month << " " << obj.year;
+		return out;
+	}
+	int getYear() {
+		return year;
+	}
+	friend istream& operator >> (istream& in, Data& obj)
+	{
+		in >> obj.day;
+		in >> obj.month;
+		in >> obj.year;
+
+		return in;
+	}
+	Data& operator = (Data obj) {
+		day = obj.day;
+		month = obj.month;
+		year = obj.year;
+		return *this;
+	}
+};
+#pragma endregion
+
+#pragma region NewsPaper
+
+
+class NewsPaper {
+private:
+	string name;
+	int num;
+	Data date;
+	int numArticles;
+	vector<string> article;
+	int edition;
+	string FIOEditor;
+public:
+	NewsPaper() : name(""), num(0), date(1, 1, 2019), article(), edition(1), FIOEditor("") {};
+	~NewsPaper() {};
+	NewsPaper & operator = (NewsPaper obj) {
+		name = obj.name;
+		num = obj.num;
+		date = obj.date;
+		numArticles = obj.numArticles;
+		for (size_t i = 0; i < numArticles; i++)
+			article.push_back(obj.article[i]);
+		edition = obj.edition;
+		FIOEditor = obj.FIOEditor;
+		return *this;
+	};
+	friend ostream& operator << (ostream& out, const NewsPaper& obj)
+	{
+		out << obj.name << endl <<
+			obj.num << endl <<
+			obj.date << endl <<
+			obj.numArticles << endl;
+		for (size_t i = 0; i < obj.numArticles; i++) {
+			out << obj.article[i].c_str() << endl;
+		}
+		out << obj.edition << endl <<
+			 obj.FIOEditor << endl;
+		return out;
+	}
+	friend istream& operator>> (istream& in,  NewsPaper& obj)
+	{
+		in >> obj.name;
+		in >> obj.num;
+		in >> obj.date;
+		for (size_t i = 0; i < obj.article.size(); i++) {
+			in >> obj.article[i];
+		}
+		in >> obj.edition;
+		in >> obj.FIOEditor ;
+
+		return in;
+	}
+	void GetInfo();
+	void SetName(string def);
+	void SetNum(int def);
+	void SetData(Data def);
+	void SetNumArticles(int def);
+	void SetArticle(vector<string>);
+	void SetEdition(int def);
+	void SetFIOEditor(string def);
+	int getYear() {
+		return date.getYear();
+	}
+};
+
+void NewsPaper::GetInfo() {
+	cout << "Name - " << name << endl <<
+		"Number - " << num << endl <<
+		"Date - " << date.data() << endl <<
+		"Article - " << endl <<
+		"Edititon - " << edition << endl <<
+		"FIO Editor - " << FIOEditor << endl;
+};
+
+void NewsPaper::SetName(string def) {
+	name = def;
+};
+
+void NewsPaper::SetNum(int def) {
+	num = def;
+};
+
+void NewsPaper::SetData(Data def) {
+	date = def;
+};
+
+void NewsPaper::SetArticle(vector<string> def) {
+	for (size_t i = 0; i < def.size(); i++)
+		article.push_back(def[i]);
+};
+
+void NewsPaper::SetEdition(int def) {
+	edition = def;
+};
+
+void NewsPaper::SetFIOEditor(string def) {
+	FIOEditor = def;
+};
+
+void NewsPaper::SetNumArticles(int def) {
+	numArticles = def;
+};
+#pragma endregion
+
+#pragma region listnode
+template<typename T>
+ class Node {
+ public :
+	 T d;
+	 Node* prev;
+	 Node* next;
+	 Node() {
+		 prev = NULL;
+		 next = NULL;
+	 };
+};
+
+template <typename T>
+class ListNode {
+private:
+	Node<T>* head;
+	Node<T>* tail;
+	Node<T>* current;
+	Node<T>* FindNodePos(int i);
+	Node<T>* FindNode(T d);
+public:
+	ListNode():head(NULL), tail(NULL),current(NULL) {};   
+	ListNode(T d) {AddHead(d); };
+	ListNode(T arr[],int length) {
+		int i = 0;
+		while (i<length) {
+			AddNode(arr[i], i);
+			i++;
+		}
+	};
+	~ListNode(); 
+	T operator[](int pos) {
+		Node<T>* d = FindNodePos(pos);
+		return d->d;
+	};
+	//T operator[](T def) {//????? ?? ???????? ??? ?? ?????? ?????? ?? ??????, ? ?? ???? ?????????
+	//	Node<T>* d = FindNode(def);
+	//	return d->d;
+	//};
+	void AddHead(T d);
+	void AddTail(T d);
+	void AddNode(T d, int pos);
+	void Next ();
+	void Pred ();
+	void ListHead();
+	void ListTail();
+	void DeleteHead();
+	void DeleteTail();
+	void DeleteNode(int i);
+	void Clear();
+	bool isEmpty();
+	T currentNode() { return current->d; };
+	void WriteToFile(string NameOfFile) {
+		ofstream out(NameOfFile, ios::app);
+		if (out.is_open() && head != NULL) {
+			current = head;
+			 do {
+				out << current->d << endl << endl;
+				Next();
+			 } 
+			 while (current != tail);
+		}
+		out.close();
+	}
+
+	void ReadFromFile() {
+		ifstream in("C:\\Users\\AZagitov\\Desktop\\2019.txt");
+		string line;
+		if (in.is_open())
+		{
+			Node<T>* temp = new Node<T>;
+			while (getline(in, line))
+			{
+				temp->d >> line;
+				AddTail(temp->d);
+			}
+		}
+		in.close();
+	}
+};
+
+template <class T>
+void ListNode<T>::Next () {
+	if (current->next == NULL)
+		current = head;
+	else
+		current = current->next;
+}
+
+template <class T>
+void ListNode<T>::Pred () {
+	if (current->prev == NULL)
+		current = tail;
+	else
+		current = current->prev;
+}
+
+template <class T>
+ListNode<T>::~ListNode()              
+{
+	while (head)                       
+	{
+		tail = head->next;            
+		delete head;                  
+		head = tail;                   
+	}
+}
+
+template <class T>
+void ListNode<T>::AddTail(T d)
+{
+	Node<T> *temp = new Node<T>;
+	temp->next = NULL;                  
+	temp-> d = d;                        
+	if (head != NULL)                   
+	{
+		temp->prev = tail;              
+		tail->next = temp;              
+		tail = temp;   
+		current = temp;
+	}
+	else
+	{
+		temp->prev = NULL;              
+		head = tail = temp;             
+	}
+}
+
+template <class T>
+void ListNode<T>::AddHead(T d)
+{
+	Node<T> *temp = new Node<T>;
+	temp->next = head;
+	temp->d = d;
+	if (head != NULL)
+	{
+		temp->prev = NULL;
+		head->prev = temp;
+		head = temp;
+		current = head;
+	}
+	else
+	{
+		temp->prev = NULL;
+		head = tail = temp;
+	}
+}
+
+template <class T>
+void ListNode<T>::AddNode(T d,int pos)
+{
+	if (head == NULL)
+	{
+		AddHead(d);
+		return;
+	}
+	Node<T>* newNode = new Node<T>;
+	newNode->d = d;
+	Node<T>* temp = head;
+	int i = 0;
+	while (i < pos && temp != NULL)
+	{
+		temp = temp->next;
+		i++;
+	}
+	if (temp == NULL)
+		AddTail(d);
+	else
+	{
+		temp->prev->next = newNode;
+		newNode->next = temp;
+		newNode->prev = temp->prev;
+		temp->prev = newNode;
+	}
+}
+
+template <class T>
+void ListNode<T>::ListHead()
+{
+	Node<T> *temp = head;
+	while (temp != NULL)            
+	{
+		cout << temp->d << " ";       
+		temp = temp->next;             
+	}
+	cout << "\n";
+}
+
+template <class T>
+void ListNode<T>::ListTail()
+{
+	Node<T> *temp = tail;
+	while (temp != NULL)
+	{
+		cout << temp->d << " ";
+		temp = temp->prev;
+	}
+	cout << "\n";
+}
+
+template <class T>
+Node<T>* ListNode<T>::FindNodePos(int pos) {
+	Node<T>* temp = new Node<T>;
+	temp = head;
+	int i = 1;
+	while (i < pos && temp != 0)
+	{
+		temp = temp->next;
+		i++;
+	}
+	if (temp == 0)
+		return 0;
+	else
+		return temp;
+}
+
+template <class T>
+Node<T>* ListNode<T>::FindNode(T d) {
+	Node<T>* temp = new Node<T>;
+	temp = head;
+	while (temp->d != d)
+	{
+		temp = temp->next;
+	}
+	if (temp == 0)
+		return 0;
+	else
+		return temp;
+}
+
+template <class T>
+void ListNode<T>::DeleteHead() {
+	Node<T>* temp = head;
+	head = head->next;
+	delete temp;
+}
+
+template <class T>
+void ListNode<T>::DeleteTail() {//?????????? tail==head
+	if (tail == NULL)
+	{
+		cout << "Node cannot be deleted from an empty ListNode" << endl;
+	}
+	else {
+		Node<T>* temp = tail;
+		tail = tail->prev;
+		tail->next = NULL;
+		delete temp;
+	}
+}
+
+template <class T>
+void ListNode<T>::DeleteNode(int pos) {
+	Node<T>* temp = FindNodePos(pos);
+	Node<T>*prev=temp->prev, *next = temp->next;
+	if (temp == head) {
+		DeleteHead();
+	} 
+	else if (temp == tail) {
+		DeleteTail();
+	}
+	else {
+		prev->next = next;
+		next->prev = prev;
+		delete temp;
+	}
+}
+
+template <class T>
+void ListNode<T>::Clear() {
+	Node<T>* temp = head;
+	while (temp != NULL) {
+		temp = head->next;
+		delete head;
+		head = temp;
+	}
+	tail = NULL;
+}
+
+template <class T>
+bool ListNode<T>::isEmpty() {
+	if ((head == NULL) && (tail == NULL)) {
+		return true;
+	}
+	else return false;
+}
+
+#pragma endregion
+
+ListNode<NewsPaper> list;
+
+void createNewsPaper() {
+	NewsPaper paper; 
+	string line;
+	int num,month,year;
+	vector<string> articles;
+
+	cout << "Input name";
+	cin >> line;
+	paper.SetName(line);
+
+	cout << "Input number";
+	cin >> num;
+	paper.SetNum(num);
+	
+	cout << "Input day";
+	cin >> num;
+
+	cout << "Input month";
+	cin >> month;
+
+	cout << "Input year";
+	cin >> year;
+	
+	Data dateOf(num, month, year);
+	paper.SetData(dateOf);
+
+	cout << "Input number of articles";
+	cin >> num;
+	paper.SetNumArticles(5);
+
+	for (int i = 0; i < num; i++) {
+		cin >> line;
+		articles.push_back(line);
+	}
+	paper.SetArticle(articles);
+
+
+	cout << "Input edition";
+	cin >> num;
+	paper.SetEdition(num);
+
+	cout << "Input FIO Editor";
+	cin >> line;
+	paper.SetFIOEditor(line);
+
+	int currentYear = list.currentNode().getYear();
+	if (paper.getYear() == currentYear)
+		list.AddHead(paper);
+	else { 
+		line = to_string(currentYear);
+		string name = "C:\\Users\\AZagitov\\Desktop\\" +  line + ".txt";
+		list.WriteToFile(name);
+		list.Clear();
+		list.AddHead(paper);
+	}
+}
+
+void loadArchive() {
+	if(!list.isEmpty()) list.Clear();
+	NewsPaper paper;
+
+	string year;
+	cout << "Please input year:" << endl;
+
+	cin >> year;
+	ifstream in("C:\\Users\\AZagitov\\Desktop\\" + year + ".txt");
+	string line;
+	int num;
+	vector<string> articles;
+	Data dateOf;
+	while (!in.eof())
+	{
+		getline(in, line);
+		paper.SetName(line);
+
+		in >> num;
+		paper.SetNum(num);
+
+		in >> dateOf;
+		paper.SetData(dateOf);
+
+		in >> num;
+		paper.SetNumArticles(num);
+
+		for (size_t i = 0; i < num + 1; i++) {
+			getline(in, line);
+			articles.push_back(line);
+		}
+		paper.SetArticle(articles);
+
+		in >> num;
+		paper.SetEdition(num);
+
+		getline(in, line);
+		getline(in, line);
+		paper.SetFIOEditor(line);
+		list.AddHead(paper);
+		getline(in, line);
+	}
+	in.close();
+}
+
+int main()
+{
+	char key;
+
+	do {
+		cout << endl << "Input 1 to create newspaper"
+			<< endl << "Input 2 to load archive"
+			<< endl << "Input 3 to save newspapers"
+			<< endl << "Input 4 to view all newspapers"
+			<< endl << "Input 5 to view current newspaper"
+			<< endl << "Input 'n' to go to next newspaper"
+			<< endl << "Input 'p' to go to previous newspaper" << endl;
+
+		cin.get(key); 
+		switch (key)
+		{
+		case('1'):
+			createNewsPaper();
+			break;
+
+		case('2'):
+			loadArchive();
+			break;
+
+		case('3'): {
+			string line = to_string(list.currentNode().getYear());
+			string NameOfFile = "C:\\Users\\AZagitov\\Desktop\\" + line + ".txt";
+			list.WriteToFile(NameOfFile);
+			break; 
+		}
+
+		case('4'):
+			list.ListHead();
+			break;
+
+		case('5'):
+			if (list.isEmpty()) 
+				cout << "No newspapers" << endl;
+			else 
+				cout << list.currentNode();
+			break;
+
+		case('n'):
+			list.Next();
+			break;
+
+		case('p'):
+			list.Pred();
+			break;
+
+		default:
+			break;
+		}
+		cin.get();
+
+	} while (key != 'q');
+}
